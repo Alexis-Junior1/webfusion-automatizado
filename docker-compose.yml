@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      # Compartimos esta carpeta para que el contenedor Git pueda inyectar el código
+      - wp_custom_content:/var/www/html/wp-content/themes/tema-webfusion
+
+  git-updater:
+    # Contenedor dedicado a sincronizar Git, cumple la rama derecha de tu esquema
+    image: alpine/git
+    volumes:
+      - wp_custom_content:/destino_wordpress
+    entrypoint: /bin/sh -c
+    # Lógica: Clona si no existe, hace pull si existe, y "mueve el PHP" al volumen de WP
+    command: >
+      "if [ ! -d /tmp/repo/.git ]; then
+        git clone https://github.com/TU_USUARIO_GITHUB/webfusion-automatizado.git /tmp/repo;
+      else
+        cd /tmp/repo && git pull;
+      fi;
+      mkdir -p /destino_wordpress;
+      cp -r /tmp/repo/src/* /destino_wordpress/;
+      echo 'Código descargado y movido a WordPress correctamente'"
+
+volumes:
+  db_data:
+  wp_custom_content:
