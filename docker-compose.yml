@@ -37,7 +37,7 @@ services:
     # Lógica: Clona si no existe, hace pull si existe, y "mueve el PHP" al volumen de WP
     command: >
       "if [ ! -d /tmp/repo/.git ]; then
-        git clone https://github.com/TU_USUARIO_GITHUB/webfusion-automatizado.git /tmp/repo;
+        git clone https://github.com/CristianAlexis-tech/webfusion-automatizado.git /tmp/repo;
       else
         cd /tmp/repo && git pull;
       fi;
